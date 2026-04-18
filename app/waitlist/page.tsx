@@ -198,8 +198,8 @@ export default function WaitlistPage() {
             <span className={styles.planName}>
               {selectedPlan === 'premium' ? 'Premium ExecutionOS' : 'Blueprint Plan'}
             </span>
-            {userData?.execution_score > 0 && (
-              <span className={styles.planScore}>Your Score: {userData.execution_score}/100</span>
+            {(userData?.execution_score ?? 0) > 0 && (
+              <span className={styles.planScore}>Your Score: {userData?.execution_score ?? 0}/100</span>
             )}
           </div>
 
