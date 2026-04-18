@@ -56,7 +56,8 @@ export async function getReportByUserId(userId: string) {
   if (report) return report;
   
   // Fallback to searching
-  for (const r of inMemoryStore.reports.values()) {
+  const reportsArray = Array.from(inMemoryStore.reports.values());
+  for (const r of reportsArray) {
     if (r.user_id === userId) return r;
   }
   return null;

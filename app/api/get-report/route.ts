@@ -15,7 +15,8 @@ export async function GET(request: NextRequest) {
 
     // Find the report for this user
     let report = null;
-    for (const r of inMemoryStore.reports.values()) {
+    const reportsArray = Array.from(inMemoryStore.reports.values());
+    for (const r of reportsArray) {
       if (r.user_id === userId) {
         report = {
           execution_score: r.execution_score,

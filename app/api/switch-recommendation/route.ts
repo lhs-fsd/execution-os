@@ -25,7 +25,8 @@ export async function POST(request: NextRequest) {
 
     // Find the interview data for this user
     let interviewData = null;
-    for (const interview of inMemoryStore.interviews.values()) {
+    const interviewsArray = Array.from(inMemoryStore.interviews.values());
+    for (const interview of interviewsArray) {
       if (interview.user_id === userId) {
         interviewData = interview;
         break;
