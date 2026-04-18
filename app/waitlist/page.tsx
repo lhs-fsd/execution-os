@@ -24,6 +24,8 @@ export default function WaitlistPage() {
   const [submitted, setSubmitted] = useState(false);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [error, setError] = useState('');
+  // Safely compute execution score for UI rendering
+  const score = typeof userData?.execution_score === 'number' ? userData!.execution_score : 0;
 
   const selectedPlan = searchParams.get('plan') || 'blueprint';
   const userId = searchParams.get('userId');
@@ -198,8 +200,8 @@ export default function WaitlistPage() {
             <span className={styles.planName}>
               {selectedPlan === 'premium' ? 'Premium ExecutionOS' : 'Blueprint Plan'}
             </span>
-            {(userData?.execution_score ?? 0) > 0 && (
-              <span className={styles.planScore}>Your Score: {userData?.execution_score ?? 0}/100</span>
+            {score > 0 && (
+              <span className={styles.planScore}>Your Score: {score}/100</span>
             )}
           </div>
 
