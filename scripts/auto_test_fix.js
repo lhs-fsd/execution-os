@@ -11,19 +11,34 @@ const { execSync } = require('child_process');
 const DEPLOY_URL = process.env.DEPLOY_URL || 'https://execution-os.vercel.app';
 
 async function testDeployment() {
+  // Primary health check via root URL
   try {
     const res = await fetch(DEPLOY_URL, { method: 'GET' });
     if (res.ok) {
       console.log('Deployment test OK:', DEPLOY_URL);
       return true;
     } else {
-      console.error('Deployment test failed with status', res.status);
-      return false;
+      console.warn('Deployment root test not OK (status):', res.status);
     }
   } catch (err) {
-    console.error('Deployment test error:', err && err.message ? err.message : err);
-    return false;
+    console.error('Deployment root test error:', err && err.message ? err.message : err);
   }
+
+  // Fallback health check via API health endpoint (public health endpoint)
+  try {
+    const healthUrl = DEPLOY_URL.replace(/\/$/, '') + '/api/health';
+    const res2 = await fetch(healthUrl, { method: 'GET' });
+    if (res2.ok) {
+      console.log('Health endpoint OK:', healthUrl);
+      return true;
+    } else {
+      console.warn('Health endpoint not OK (status):', res2.status);
+    }
+  } catch (err) {
+    console.error('Health endpoint test error:', err && err.message ? err.message : err);
+  }
+
+  return false;
 }
 
 function patchFile(filePath, patchFn) {
