@@ -36,7 +36,7 @@ export default function Home() {
           </p>
           
           <div className={`${styles.heroCta} ${loaded ? styles.animateIn : ''}`}>
-            <a href="/interview" className={styles.ctaButton}>
+            <a href="/execution-os/interview" className={styles.ctaButton}>
               Get Your Free Diagnosis
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M5 12h14M12 5l7 7-7 7"/>
@@ -80,7 +80,7 @@ export default function Home() {
           <div className={`${styles.ctaBox} ${loaded ? styles.animateInDelay3 : ''}`}>
             <h3>What If You Could Change This—Permanently?</h3>
             <p>ExecutionOS doesn&apos;t just give you tips. We identify the exact psychological pattern keeping you stuck and give you a personalized roadmap to break free.</p>
-            <a href="/interview" className={styles.ctaButton}>
+            <a href="/execution-os/interview" className={styles.ctaButton}>
               Start Your Free Diagnosis
             </a>
           </div>
@@ -189,7 +189,7 @@ export default function Home() {
           <div className={`${styles.ctaBox} ${loaded ? styles.animateIn : ''}`}>
             <h2>Ready to Finally Break Free?</h2>
             <p>Discover exactly why you can&apos;t execute—and what to do about it.</p>
-            <a href="/interview" className={styles.ctaButton}>
+            <a href="/execution-os/interview" className={styles.ctaButton}>
               Start Free Diagnosis Now
             </a>
             <p className={styles.ctaNote}>No credit card required • Takes 3 minutes • 100% free</p>

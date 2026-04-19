@@ -45,7 +45,7 @@ function PlansContentInner() {
         <div className={styles.container}>
           <div className={styles.errorContainer}>
             <h2>Please complete the diagnosis first</h2>
-            <a href="/interview" className="btn btn-primary">Start Diagnosis</a>
+            <a href="/execution-os/interview" className="btn btn-primary">Start Diagnosis</a>
           </div>
         </div>
       </main>
