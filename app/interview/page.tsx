@@ -236,7 +236,7 @@ export default function InterviewPage() {
       sessionStorage.setItem('executionOS_score', String(reportData.execution_score));
       sessionStorage.setItem('executionOS_recommendation', reportData.ai_recommendation);
 
-      router.push(`/report?userId=${userId}`);
+      router.push(`/execution-os/report?userId=${userId}`);
     } catch (err) {
       console.error('Error:', err);
       setError('Failed to submit. Please try again.');
