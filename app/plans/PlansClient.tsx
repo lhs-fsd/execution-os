@@ -10,7 +10,7 @@ interface UserData {
   execution_score: number;
 }
 
-function PlansContent() {
+function PlansContentInner() {
   const searchParams = useSearchParams();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -276,7 +276,7 @@ export default function PlansContent() {
         </div>
       </main>
     }>
-      <PlansContent />
+      <PlansContentInner />
     </Suspense>
   );
 }

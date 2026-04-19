@@ -14,7 +14,7 @@ interface ReportData {
   fix_plan: string[];
 }
 
-function ReportContent() {
+function ReportContentInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -255,7 +255,7 @@ export default function ReportContent() {
         </div>
       </main>
     }>
-      <ReportContent />
+      <ReportContentInner />
     </Suspense>
   );
 }

@@ -14,7 +14,7 @@ interface UserData {
   ai_recommendation: string;
 }
 
-function WaitlistContent() {
+function WaitlistContentInner() {
   const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
     fullName: '',
@@ -317,7 +317,7 @@ export default function WaitlistContent() {
         </div>
       </main>
     }>
-      <WaitlistContent />
+      <WaitlistContentInner />
     </Suspense>
   );
 }
