@@ -1,16 +1,16 @@
 :root {
-  --bg-primary: #0A0A0F;
-  --bg-secondary: #12121A;
-  --bg-card: #1A1A24;
-  --accent-mint: #00E5A0;
-  --accent-coral: #FF6B6B;
-  --accent-purple: #6C5CE7;
-  --accent-gold: #FFD93D;
-  --text-primary: #FFFFFF;
-  --text-secondary: #8A8A9A;
-  --text-muted: #5A5A6A;
-  --border: #2A2A35;
-  --border-light: #3A3A45;
+  --bg-primary: #0F172A;
+  --bg-secondary: #1E293B;
+  --bg-card: #334155;
+  --accent-mint: #38BDF8;
+  --accent-coral: #F472B6;
+  --accent-purple: #A855F7;
+  --accent-gold: #FBBF24;
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  --border: #475569;
+  --border-light: #64748B;
   
   --font-heading: 'Outfit', sans-serif;
   --font-body: 'DM Sans', sans-serif;
@@ -24,8 +24,8 @@
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
-  --shadow-glow-mint: 0 0 30px rgba(0, 229, 160, 0.3);
-  --shadow-glow-coral: 0 0 30px rgba(255, 107, 107, 0.3);
+  --shadow-glow-mint: 0 0 30px rgba(56, 189, 248, 0.3);
+  --shadow-glow-coral: 0 0 30px rgba(244, 114, 182, 0.3);
   
   --transition-fast: 150ms ease;
   --transition-normal: 250ms ease;
@@ -91,7 +91,7 @@ input, textarea, select {
 }
 
 .glass {
-  background: rgba(26, 26, 36, 0.7);
+  background: rgba(30, 41, 59, 0.7);
   backdrop-filter: blur(12px);
   border: 1px solid var(--border);
 }
@@ -114,7 +114,7 @@ input, textarea, select {
 }
 
 .btn-primary:hover {
-  background: #00cc8e;
+  background: #0EA5E9;
   box-shadow: var(--shadow-glow-mint);
   transform: translateY(-2px);
 }
