@@ -145,7 +145,7 @@ function PlansContentInner() {
 
             <div className={styles.planActions}>
               <a 
-                href={`/waitlist?userId=${userId}&plan=blueprint`}
+                href={`/execution-os/waitlist?userId=${userId}&plan=blueprint`}
                 className={styles.selectButton}
               >
                 Join Waitlist — It&apos;s Free
@@ -237,7 +237,7 @@ function PlansContentInner() {
 
             <div className={styles.planActions}>
               <a 
-                href={`/waitlist?userId=${userId}&plan=premium`}
+                href={`/execution-os/waitlist?userId=${userId}&plan=premium`}
                 className={`${styles.selectButton} ${styles.premiumButton}`}
               >
                 Join Waitlist — It&apos;s Free
