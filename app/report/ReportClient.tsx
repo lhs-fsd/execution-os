@@ -72,7 +72,7 @@ function ReportContentInner() {
           <div className={styles.errorContainer}>
             <h2>Report not found</h2>
             <p>Please complete the diagnosis first.</p>
-            <a href="/execution-os/interview" className="btn btn-primary">Start Diagnosis</a>
+            <a href="/interview" className="btn btn-primary">Start Diagnosis</a>
           </div>
         </div>
       </main>
@@ -96,7 +96,7 @@ function ReportContentInner() {
         <div className={styles.errorContainer}>
           <h2>Report not found</h2>
           <p>Please complete the diagnosis first.</p>
-          <a href="/execution-os/interview" className="btn btn-primary">Start Diagnosis</a>
+          <a href="/interview" className="btn btn-primary">Start Diagnosis</a>
         </div>
       </main>
     );
@@ -107,7 +107,7 @@ function ReportContentInner() {
   return (
     <main className={styles.main}>
       <div className={styles.container}>
-        <a href="/execution-os/" className={styles.backLink}>
+        <a href="/" className={styles.backLink}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M19 12H5M12 19l-7-7 7-7"/>
           </svg>
@@ -227,7 +227,7 @@ function ReportContentInner() {
               {recommendation === 'premium' ? 'Premium ExecutionOS' : 'Blueprint Plan'}
             </span>
           </div>
-          <a href="/execution-os/plans" className={styles.viewPlansBtn}>
+          <a href="/plans" className={styles.viewPlansBtn}>
             View Plans
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M5 12h14M12 5l7 7-7 7"/>
