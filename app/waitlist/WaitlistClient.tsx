@@ -1,7 +1,6 @@
 'use client';
 
 import { Suspense, useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import styles from './page.module.css';
 
@@ -15,7 +14,6 @@ interface UserData {
 }
 
 function WaitlistContentInner() {
-  const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -25,51 +23,37 @@ function WaitlistContentInner() {
   const [submitted, setSubmitted] = useState(false);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [error, setError] = useState('');
-  const score = typeof userData?.execution_score === 'number' ? userData!.execution_score : 0;
-
-  const selectedPlan = searchParams.get('plan') || 'blueprint';
-  const userId = searchParams.get('userId');
+  const [needsInterview, setNeedsInterview] = useState(false);
+  
+  const selectedPlan = 'blueprint';
 
   useEffect(() => {
     const storedUser = sessionStorage.getItem('executionOS_user');
     const storedBudgetTier = sessionStorage.getItem('executionOS_budgetTier');
     const storedScore = sessionStorage.getItem('executionOS_score');
     const storedRecommendation = sessionStorage.getItem('executionOS_recommendation');
+    const userId = sessionStorage.getItem('executionOS_userId');
     
-    if (storedUser) {
-      const user = JSON.parse(storedUser);
-      setUserData({
-        full_name: user.full_name || '',
-        email: user.email || '',
-        phone: user.phone || '',
-        budget_tier: storedBudgetTier || 'medium',
-        execution_score: user.execution_score || 0,
-        ai_recommendation: storedRecommendation || user.ai_recommendation || 'blueprint',
-      });
-      setFormData({
-        fullName: user.full_name || '',
-        email: user.email || '',
-        phone: user.phone || '',
-      });
+    if (!userId || !storedUser) {
+      setNeedsInterview(true);
       return;
     }
 
-    if (!userId) return;
-
-    fetch(`/api/get-recommendation?userId=${userId}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.user) {
-          setUserData(data.user);
-          setFormData(prev => ({
-            ...prev,
-            fullName: data.user.full_name || '',
-            email: data.user.email || '',
-            phone: data.user.phone || '',
-          }));
-        }
-      });
-  }, [userId]);
+    const user = JSON.parse(storedUser);
+    setUserData({
+      full_name: user.full_name || '',
+      email: user.email || '',
+      phone: user.phone || '',
+      budget_tier: storedBudgetTier || 'medium',
+      execution_score: storedScore ? parseInt(storedScore) : (user.execution_score || 0),
+      ai_recommendation: storedRecommendation || user.ai_recommendation || 'blueprint',
+    });
+    setFormData({
+      fullName: user.full_name || '',
+      email: user.email || '',
+      phone: user.phone || '',
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,12 +67,13 @@ function WaitlistContentInner() {
     setError('');
 
     try {
+      const userId = sessionStorage.getItem('executionOS_userId');
       let finalAiReasoning = '';
       
       if (selectedPlan === (userData?.ai_recommendation || 'blueprint')) {
-        finalAiReasoning = `This selection aligns with our AI recommendation based on your budget tier (${userData?.budget_tier || 'medium'}) and execution score (${userData?.execution_score || 0}). The ${selectedPlan === 'premium' ? 'Premium ExecutionOS' : 'Blueprint Plan'} is optimally suited to address your specific execution challenges.`;
+        finalAiReasoning = `This selection aligns with our AI recommendation based on your budget tier (${userData?.budget_tier || 'medium'}) and execution score (${userData?.execution_score || 0}).`;
       } else {
-        finalAiReasoning = `You've chosen to override our recommendation. Despite your ${userData?.budget_tier || 'medium'} budget and score of ${userData?.execution_score || 0}, you've selected the ${selectedPlan === 'premium' ? 'Premium ExecutionOS' : 'Blueprint Plan'}. This choice reflects your personal preference and assessment of your needs.`;
+        finalAiReasoning = `You've chosen to override our recommendation.`;
       }
 
       const { data: entry, error } = await supabase
@@ -133,6 +118,21 @@ function WaitlistContentInner() {
     }
   };
 
+  const score = userData?.execution_score || 0;
+
+  if (needsInterview) {
+    return (
+      <main className={styles.main}>
+        <div className={styles.container}>
+          <div className={styles.errorContainer}>
+            <h2>Please complete the diagnosis first</h2>
+            <a href="/interview" className="btn btn-primary">Start Diagnosis</a>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   if (submitted) {
     return (
       <main className={styles.main}>
@@ -144,14 +144,13 @@ function WaitlistContentInner() {
                 <polyline points="22 4 12 14.01 9 11.01"/>
               </svg>
             </div>
-            <h1>You&apos;re In! 🎉</h1>
+            <h1>You&apos;re In!</h1>
             <p>
-              Congratulations on taking the first step! We&apos;ll send updates to <strong>{formData.email}</strong> when your {selectedPlan === 'premium' ? 'Premium ExecutionOS' : 'Blueprint Plan'} becomes available.
+              Congratulations! We&apos;ll send updates to <strong>{formData.email}</strong> when your plan is ready.
             </p>
             
             <div className={styles.shareSection}>
               <h3>Want to skip the wait?</h3>
-              <p>Share with friends and move up the waitlist!</p>
               <div className={styles.shareButtons}>
                 <button className={styles.shareButton} onClick={() => handleShare('x')}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -171,9 +170,7 @@ function WaitlistContentInner() {
             <div className={styles.successDetails}>
               <div className={styles.detailItem}>
                 <span className={styles.detailLabel}>Plan</span>
-                <span className={styles.detailValue}>
-                  {selectedPlan === 'premium' ? 'Premium ExecutionOS' : 'Blueprint Plan'}
-                </span>
+                <span className={styles.detailValue}>Blueprint Plan</span>
               </div>
               <div className={styles.detailItem}>
                 <span className={styles.detailLabel}>Your Score</span>
@@ -196,7 +193,7 @@ function WaitlistContentInner() {
   return (
     <main className={styles.main}>
       <div className={styles.container}>
-        <a href={`/plans?userId=${userId}`} className={styles.backLink}>
+        <a href="/plans" className={styles.backLink}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M19 12H5M12 19l-7-7 7-7"/>
           </svg>
@@ -206,9 +203,7 @@ function WaitlistContentInner() {
         <div className={styles.formCard}>
           <div className={styles.planBadge}>
             <span className={styles.planLabel}>You&apos;re joining the waitlist for</span>
-            <span className={styles.planName}>
-              {selectedPlan === 'premium' ? 'Premium ExecutionOS' : 'Blueprint Plan'}
-            </span>
+            <span className={styles.planName}>Blueprint Plan</span>
             {score > 0 && (
               <span className={styles.planScore}>Your Score: {score}/100</span>
             )}
@@ -216,7 +211,7 @@ function WaitlistContentInner() {
 
           <h1 className={styles.title}>Secure Your Spot</h1>
           <p className={styles.subtitle}>
-            Add your details to get early access. No payment required now—we&apos;ll reach out when your plan is ready.
+            Add your details to get early access.
           </p>
 
           <form onSubmit={handleSubmit} className={styles.form}>
@@ -273,35 +268,8 @@ function WaitlistContentInner() {
           </form>
 
           <p className={styles.note}>
-            🔒 We respect your privacy. No spam, ever. Unsubscribe anytime.
+            We respect your privacy. No spam, ever.
           </p>
-        </div>
-
-        <div className={styles.infoCard}>
-          <h3>What happens next?</h3>
-          <ul>
-            <li>
-              <span className={styles.stepNumber}>1</span>
-              <div>
-                <strong>Confirmation Email</strong>
-                <p>We&apos;ll confirm your spot on the waitlist within minutes.</p>
-              </div>
-            </li>
-            <li>
-              <span className={styles.stepNumber}>2</span>
-              <div>
-                <strong>Early Access Notification</strong>
-                <p>You&apos;ll be notified before anyone else when enrollment opens.</p>
-              </div>
-            </li>
-            <li>
-              <span className={styles.stepNumber}>3</span>
-              <div>
-                <strong>Priority Placement</strong>
-                <p>Waitlist members get priority access and special launch pricing.</p>
-              </div>
-            </li>
-          </ul>
         </div>
       </div>
     </main>

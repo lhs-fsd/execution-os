@@ -1,7 +1,6 @@
 'use client';
 
 import { Suspense, useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
 import styles from './page.module.css';
 
 interface UserData {
@@ -11,46 +10,47 @@ interface UserData {
 }
 
 function PlansContentInner() {
-  const searchParams = useSearchParams();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const userId = searchParams.get('userId');
+  const [needsInterview, setNeedsInterview] = useState(false);
+  const [userId, setUserId] = useState('');
 
   useEffect(() => {
     const storedUser = sessionStorage.getItem('executionOS_user');
     const storedRecommendation = sessionStorage.getItem('executionOS_recommendation');
+    const storedScore = sessionStorage.getItem('executionOS_score');
+    const uid = sessionStorage.getItem('executionOS_userId');
     
-    if (storedUser) {
-      const user = JSON.parse(storedUser);
-      setUserData({
-        budget_tier: user.budget_tier || 'medium',
-        ai_recommendation: storedRecommendation || user.ai_recommendation || 'blueprint',
-        execution_score: user.execution_score || 0,
-      });
+    if (!uid || !storedUser) {
+      setNeedsInterview(true);
       setLoading(false);
       return;
     }
 
-    if (!userId) {
-      setLoading(false);
-      return;
-    }
-
-    fetch(`/api/get-recommendation?userId=${userId}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.user) {
-          setUserData(data.user);
-        }
-        setLoading(false);
-      })
-      .catch(() => {
-        setLoading(false);
-      });
-  }, [userId]);
+    setUserId(uid);
+    const user = JSON.parse(storedUser);
+    setUserData({
+      budget_tier: user.budget_tier || 'medium',
+      ai_recommendation: storedRecommendation || user.ai_recommendation || 'blueprint',
+      execution_score: storedScore ? parseInt(storedScore) : (user.execution_score || 0),
+    });
+    setLoading(false);
+  }, []);
 
   const recommendedPlan = userData?.ai_recommendation || 'blueprint';
+
+  if (needsInterview) {
+    return (
+      <main className={styles.main}>
+        <div className={styles.container}>
+          <div className={styles.errorContainer}>
+            <h2>Please complete the diagnosis first</h2>
+            <a href="/interview" className="btn btn-primary">Start Diagnosis</a>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   if (loading) {
     return (

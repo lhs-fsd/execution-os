@@ -1,7 +1,6 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
 import styles from './page.module.css';
 
 interface ReportData {
@@ -15,43 +14,26 @@ interface ReportData {
 }
 
 function ReportContentInner() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [report, setReport] = useState<ReportData | null>(null);
   const [budgetTier, setBudgetTier] = useState('');
+  const [needsInterview, setNeedsInterview] = useState(false);
 
   useEffect(() => {
-    const userId = searchParams.get('userId');
-    if (!userId) {
-      router.push('/interview');
-      return;
-    }
-
     const storedReport = sessionStorage.getItem('executionOS_report');
     const storedBudgetTier = sessionStorage.getItem('executionOS_budgetTier');
+    const userId = sessionStorage.getItem('executionOS_userId');
     
-    if (storedReport) {
-      setReport(JSON.parse(storedReport));
-      setBudgetTier(storedBudgetTier || 'medium');
+    if (!userId || !storedReport) {
+      setNeedsInterview(true);
       setLoading(false);
       return;
     }
-
+    
+    setReport(JSON.parse(storedReport));
     setBudgetTier(storedBudgetTier || 'medium');
-
-    fetch(`/api/get-report?userId=${userId}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.report) {
-          setReport(data.report);
-        }
-        setLoading(false);
-      })
-      .catch(() => {
-        setLoading(false);
-      });
-  }, [searchParams, router]);
+    setLoading(false);
+  }, []);
 
   const getRiskColor = (risk: string) => {
     switch (risk) {
@@ -83,6 +65,20 @@ function ReportContentInner() {
     return 'blueprint';
   };
 
+  if (needsInterview) {
+    return (
+      <main className={styles.main}>
+        <div className={styles.container}>
+          <div className={styles.errorContainer}>
+            <h2>Report not found</h2>
+            <p>Please complete the diagnosis first.</p>
+            <a href="/interview" className="btn btn-primary">Start Diagnosis</a>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   if (loading) {
     return (
       <main className={styles.main}>
@@ -106,7 +102,7 @@ function ReportContentInner() {
     );
   }
 
-  const userId = searchParams.get('userId');
+  const recommendation = getRecommendation();
 
   return (
     <main className={styles.main}>
@@ -166,9 +162,7 @@ function ReportContentInner() {
           <div className={styles.card}>
             <h3 className={styles.bottleneckTitle}>{report.primary_bottleneck}</h3>
             <p className={styles.bottleneckDesc}>
-              This is the single most significant barrier to your execution. It accounts for 
-              the majority of your productivity losses and creates a cascade effect that 
-              undermines your ability to complete even simple tasks.
+              This is the single most significant barrier to your execution.
             </p>
           </div>
         </section>
@@ -230,10 +224,10 @@ function ReportContentInner() {
           <div className={styles.recommendedBadge}>
             <span className={styles.recommendationLabel}>AI Recommended</span>
             <span className={styles.recommendationValue}>
-              {getRecommendation() === 'premium' ? 'Premium ExecutionOS' : 'Blueprint Plan'}
+              {recommendation === 'premium' ? 'Premium ExecutionOS' : 'Blueprint Plan'}
             </span>
           </div>
-          <a href={`/plans?userId=${userId}`} className={styles.viewPlansBtn}>
+          <a href="/plans" className={styles.viewPlansBtn}>
             View Plans
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M5 12h14M12 5l7 7-7 7"/>
