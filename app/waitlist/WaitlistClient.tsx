@@ -181,7 +181,7 @@ function WaitlistContentInner() {
                 <span className={styles.detailValue}>Waitlist Active</span>
               </div>
             </div>
-            <a href="/" className={styles.homeButton}>
+            <a href="/execution-os/" className={styles.homeButton}>
               Back to Home
             </a>
           </div>
