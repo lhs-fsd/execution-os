@@ -2,6 +2,7 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 import styles from './page.module.css';
 
 interface UserData {
@@ -82,29 +83,39 @@ function WaitlistContent() {
     setError('');
 
     try {
-      const response = await fetch('/api/submit-waitlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId,
-          selectedPlan,
-          recommendedPlan: userData?.ai_recommendation || 'blueprint',
-          budgetTier: userData?.budget_tier || 'medium',
-          executionScore: userData?.execution_score || 0,
-          fullName: formData.fullName,
+      let finalAiReasoning = '';
+      
+      if (selectedPlan === (userData?.ai_recommendation || 'blueprint')) {
+        finalAiReasoning = `This selection aligns with our AI recommendation based on your budget tier (${userData?.budget_tier || 'medium'}) and execution score (${userData?.execution_score || 0}). The ${selectedPlan === 'premium' ? 'Premium ExecutionOS' : 'Blueprint Plan'} is optimally suited to address your specific execution challenges.`;
+      } else {
+        finalAiReasoning = `You've chosen to override our recommendation. Despite your ${userData?.budget_tier || 'medium'} budget and score of ${userData?.execution_score || 0}, you've selected the ${selectedPlan === 'premium' ? 'Premium ExecutionOS' : 'Blueprint Plan'}. This choice reflects your personal preference and assessment of your needs.`;
+      }
+
+      const { data: entry, error } = await supabase
+        .from('waitlist')
+        .insert({
+          user_id: userId,
+          selected_plan: selectedPlan,
+          recommended_plan: userData?.ai_recommendation || 'blueprint',
+          budget_tier: userData?.budget_tier || 'medium',
+          execution_score: userData?.execution_score || 0,
+          full_name: formData.fullName,
           email: formData.email,
           phone: formData.phone,
-        }),
-      });
+          final_ai_reasoning: finalAiReasoning,
+        })
+        .select()
+        .single();
 
-      const data = await response.json();
+      if (error) throw error;
 
-      if (data.success) {
+      if (entry) {
         setSubmitted(true);
       } else {
-        setError(data.error || 'Something went wrong. Please try again.');
+        setError('Something went wrong. Please try again.');
       }
     } catch (err) {
+      console.error('Waitlist error:', err);
       setError('Failed to join waitlist. Please try again.');
     } finally {
       setLoading(false);
