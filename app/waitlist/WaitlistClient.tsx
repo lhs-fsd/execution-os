@@ -308,7 +308,7 @@ function WaitlistContent() {
   );
 }
 
-export default function WaitlistPage() {
+export default function WaitlistContent() {
   return (
     <Suspense fallback={
       <main className={styles.main}>

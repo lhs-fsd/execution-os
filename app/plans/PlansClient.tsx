@@ -267,7 +267,7 @@ function PlansContent() {
   );
 }
 
-export default function PlansPage() {
+export default function PlansContent() {
   return (
     <Suspense fallback={
       <main className={styles.main}>

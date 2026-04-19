@@ -245,7 +245,7 @@ function ReportContent() {
   );
 }
 
-export default function ReportPage() {
+export default function ReportContent() {
   return (
     <Suspense fallback={
       <main className={styles.main}>
