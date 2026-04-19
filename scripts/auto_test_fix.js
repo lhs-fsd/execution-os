@@ -26,7 +26,8 @@ async function testDeployment() {
 
   // Fallback health check via API health endpoint (public health endpoint)
   try {
-    const healthUrl = DEPLOY_URL.replace(/\/$/, '') + '/api/health';
+    const trimmed = (DEPLOY_URL || '').trim();
+    const healthUrl = trimmed.replace(/\/$/, '') + '/api/health';
     const res2 = await fetch(healthUrl, { method: 'GET' });
     if (res2.ok) {
       console.log('Health endpoint OK:', healthUrl);
