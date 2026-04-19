@@ -1,7 +1,7 @@
 'use client';
 export const dynamic = 'force-dynamic';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import styles from './page.module.css';
 
@@ -15,7 +15,7 @@ interface ReportData {
   fix_plan: string[];
 }
 
-export default function ReportPage() {
+function ReportContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -29,26 +29,17 @@ export default function ReportPage() {
       return;
     }
 
-    // First try to get from sessionStorage (faster)
     const storedReport = sessionStorage.getItem('executionOS_report');
     const storedBudgetTier = sessionStorage.getItem('executionOS_budgetTier');
-    const storedUser = sessionStorage.getItem('executionOS_user');
-    
-    console.log('[Report Page] storedReport:', storedReport);
-    console.log('[Report Page] storedBudgetTier:', storedBudgetTier);
-    console.log('[Report Page] userId:', userId);
     
     if (storedReport) {
-      console.log('[Report Page] Using stored report');
       setReport(JSON.parse(storedReport));
       setBudgetTier(storedBudgetTier || 'medium');
       setLoading(false);
       return;
     }
 
-    // Fallback to API
     setBudgetTier(storedBudgetTier || 'medium');
-    console.log('[Report Page] Fetching from API');
 
     fetch(`/api/get-report?userId=${userId}`)
       .then(res => res.json())
@@ -87,7 +78,6 @@ export default function ReportPage() {
 
   const getRecommendation = () => {
     if (!report) return 'premium';
-    // Based on execution score and budget
     if (budgetTier === 'high' || (budgetTier === 'medium' && report.execution_score < 50)) {
       return 'premium';
     }
@@ -116,6 +106,8 @@ export default function ReportPage() {
       </main>
     );
   }
+
+  const userId = searchParams.get('userId');
 
   return (
     <main className={styles.main}>
@@ -242,7 +234,7 @@ export default function ReportPage() {
               {getRecommendation() === 'premium' ? 'Premium ExecutionOS' : 'Blueprint Plan'}
             </span>
           </div>
-          <a href={`/plans?userId=${searchParams.get('userId')}`} className={styles.viewPlansBtn}>
+          <a href={`/plans?userId=${userId}`} className={styles.viewPlansBtn}>
             View Plans
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M5 12h14M12 5l7 7-7 7"/>
@@ -251,5 +243,20 @@ export default function ReportPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function ReportPage() {
+  return (
+    <Suspense fallback={
+      <main className={styles.main}>
+        <div className={styles.loadingContainer}>
+          <div className={styles.spinnerLarge}></div>
+          <p>Analyzing your execution patterns...</p>
+        </div>
+      </main>
+    }>
+      <ReportContent />
+    </Suspense>
   );
 }

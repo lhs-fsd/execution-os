@@ -1,7 +1,7 @@
 'use client';
 export const dynamic = 'force-dynamic';
 
-import { useSearchParams } from 'next/navigation';
+import { Suspense, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import styles from './page.module.css';
 
@@ -14,7 +14,7 @@ interface UserData {
   ai_recommendation: string;
 }
 
-export default function WaitlistPage() {
+function WaitlistContent() {
   const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
     fullName: '',
@@ -25,14 +25,12 @@ export default function WaitlistPage() {
   const [submitted, setSubmitted] = useState(false);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [error, setError] = useState('');
-  // Safely compute execution score for UI rendering
   const score = typeof userData?.execution_score === 'number' ? userData!.execution_score : 0;
 
   const selectedPlan = searchParams.get('plan') || 'blueprint';
   const userId = searchParams.get('userId');
 
   useEffect(() => {
-    // First try sessionStorage for instant data
     const storedUser = sessionStorage.getItem('executionOS_user');
     const storedBudgetTier = sessionStorage.getItem('executionOS_budgetTier');
     const storedScore = sessionStorage.getItem('executionOS_score');
@@ -297,5 +295,19 @@ export default function WaitlistPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function WaitlistPage() {
+  return (
+    <Suspense fallback={
+      <main className={styles.main}>
+        <div className={styles.loadingContainer}>
+          <div className={styles.spinner}></div>
+        </div>
+      </main>
+    }>
+      <WaitlistContent />
+    </Suspense>
   );
 }

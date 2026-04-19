@@ -1,7 +1,7 @@
 'use client';
 export const dynamic = 'force-dynamic';
 
-import { useSearchParams } from 'next/navigation';
+import { Suspense, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import styles from './page.module.css';
 
@@ -11,7 +11,7 @@ interface UserData {
   execution_score: number;
 }
 
-export default function PlansPage() {
+function PlansContent() {
   const searchParams = useSearchParams();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -19,7 +19,6 @@ export default function PlansPage() {
   const userId = searchParams.get('userId');
 
   useEffect(() => {
-    // First try sessionStorage
     const storedUser = sessionStorage.getItem('executionOS_user');
     const storedRecommendation = sessionStorage.getItem('executionOS_recommendation');
     
@@ -85,7 +84,6 @@ export default function PlansPage() {
         </header>
 
         <div className={styles.plansGrid}>
-          {/* Blueprint Plan */}
           <div className={`${styles.planCard} ${recommendedPlan === 'blueprint' ? styles.recommended : ''}`}>
             {recommendedPlan === 'blueprint' && (
               <div className={styles.recommendationBadge}>
@@ -160,7 +158,6 @@ export default function PlansPage() {
             </div>
           </div>
 
-          {/* Premium ExecutionOS */}
           <div className={`${styles.planCard} ${styles.premium} ${recommendedPlan === 'premium' ? styles.recommended : ''}`}>
             {recommendedPlan === 'premium' && (
               <div className={styles.recommendationBadge}>
@@ -268,5 +265,19 @@ export default function PlansPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function PlansPage() {
+  return (
+    <Suspense fallback={
+      <main className={styles.main}>
+        <div className={styles.loadingContainer}>
+          <div className={styles.spinner}></div>
+        </div>
+      </main>
+    }>
+      <PlansContent />
+    </Suspense>
   );
 }

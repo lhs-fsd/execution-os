@@ -1,79 +1,103 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://demo.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'demo-key';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://sszwlcfagfbbsgqmjded.supabase.co';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_K5yChtNulQP_NJ129UEb7g_7bNEwp53';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-// For demo/development without real Supabase credentials
-// Data is stored in memory
-interface InMemoryStore {
-  users: Map<string, any>;
-  interviews: Map<string, any>;
-  reports: Map<string, any>;
-  waitlist: Map<string, any>;
-}
-
-export const inMemoryStore: InMemoryStore = {
-  users: new Map(),
-  interviews: new Map(),
-  reports: new Map(),
-  waitlist: new Map(),
-};
 
 export async function saveUser(userData: any) {
   const id = userData.id || crypto.randomUUID();
   const user = { ...userData, id, created_at: new Date().toISOString() };
-  inMemoryStore.users.set(id, user);
-  return user;
+  
+  const { data, error } = await supabase
+    .from('users')
+    .upsert({ ...user, id })
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
 }
 
 export async function getUser(id: string) {
-  return inMemoryStore.users.get(id) || null;
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', id)
+    .single();
+  
+  if (error) return null;
+  return data;
 }
 
 export async function saveInterview(interviewData: any) {
   const id = crypto.randomUUID();
   const interview = { ...interviewData, id, created_at: new Date().toISOString() };
-  inMemoryStore.interviews.set(id, interview);
-  return interview;
+  
+  const { data, error } = await supabase
+    .from('interviews')
+    .insert(interview)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
 }
 
 export async function saveReport(reportData: any) {
   const id = crypto.randomUUID();
   const report = { ...reportData, id, created_at: new Date().toISOString() };
-  // Store by both id and user_id for easy retrieval
-  inMemoryStore.reports.set(id, report);
-  if (reportData.user_id) {
-    inMemoryStore.reports.set(reportData.user_id, report);
-  }
-  return report;
+  
+  const { data, error } = await supabase
+    .from('reports')
+    .insert(report)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
 }
 
 export async function getReportByUserId(userId: string) {
-  // First try to get by user_id directly
-  const report = inMemoryStore.reports.get(userId);
-  if (report) return report;
+  const { data, error } = await supabase
+    .from('reports')
+    .select('*')
+    .eq('user_id', userId)
+    .single();
   
-  // Fallback to searching
-  const reportsArray = Array.from(inMemoryStore.reports.values());
-  for (const r of reportsArray) {
-    if (r.user_id === userId) return r;
-  }
-  return null;
+  if (error) return null;
+  return data;
 }
 
 export async function updateUserRecommendation(userId: string, recommendation: string) {
-  const user = inMemoryStore.users.get(userId);
-  if (user) {
-    user.ai_recommendation = recommendation;
-    inMemoryStore.users.set(userId, user);
-  }
+  const { error } = await supabase
+    .from('users')
+    .update({ ai_recommendation: recommendation })
+    .eq('id', userId);
+  
+  if (error) throw error;
 }
 
 export async function saveWaitlistEntry(entryData: any) {
   const id = crypto.randomUUID();
   const entry = { ...entryData, id, created_at: new Date().toISOString() };
-  inMemoryStore.waitlist.set(id, entry);
-  return entry;
+  
+  const { data, error } = await supabase
+    .from('waitlist')
+    .insert(entry)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+}
+
+export async function getWaitlistEntries() {
+  const { data, error } = await supabase
+    .from('waitlist')
+    .select('*')
+    .order('created_at', { ascending: false });
+  
+  if (error) throw error;
+  return data;
 }
