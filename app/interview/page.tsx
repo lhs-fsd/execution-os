@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { supabase, generateExecutionReport } from '@/lib/supabase';
 import styles from './page.module.css';
 
 interface FormData {
@@ -48,51 +49,8 @@ const countryCodes = [
   { code: '+86', country: 'CN - China' },
   { code: '+61', country: 'AU - Australia' },
   { code: '+55', country: 'BR - Brazil' },
-  { code: '+234', country: 'NG - Nigeria' },
-  { code: '+254', country: 'KE - Kenya' },
-  { code: '+27', country: 'ZA - South Africa' },
-  { code: '+971', country: 'AE - United Arab Emirates' },
-  { code: '+20', country: 'EG - Egypt' },
-  { code: '+92', country: 'PK - Pakistan' },
-  { code: '+62', country: 'ID - Indonesia' },
-  { code: '+63', country: 'PH - Philippines' },
-  { code: '+90', country: 'TR - Turkey' },
-  { code: '+82', country: 'KR - South Korea' },
-  { code: '+39', country: 'IT - Italy' },
-  { code: '+34', country: 'ES - Spain' },
-  { code: '+31', country: 'NL - Netherlands' },
-  { code: '+46', country: 'SE - Sweden' },
-  { code: '+47', country: 'NO - Norway' },
-  { code: '+45', country: 'DK - Denmark' },
-  { code: '+41', country: 'CH - Switzerland' },
-  { code: '+43', country: 'AT - Austria' },
-  { code: '+32', country: 'BE - Belgium' },
-  { code: '+48', country: 'PL - Poland' },
-  { code: '+7', country: 'RU - Russia' },
-  { code: '+380', country: 'UA - Ukraine' },
-  { code: '+972', country: 'IL - Israel' },
-  { code: '+966', country: 'SA - Saudi Arabia' },
-  { code: '+965', country: 'KW - Kuwait' },
-  { code: '+968', country: 'OM - Oman' },
-  { code: '+973', country: 'BH - Bahrain' },
-  { code: '+974', country: 'QA - Qatar' },
-  { code: '+212', country: 'MA - Morocco' },
-  { code: '+216', country: 'TN - Tunisia' },
-  { code: '+225', country: 'CI - Ivory Coast' },
-  { code: '+233', country: 'GH - Ghana' },
-  { code: '+251', country: 'ET - Ethiopia' },
-  { code: '+256', country: 'UG - Uganda' },
-  { code: '+260', country: 'ZM - Zambia' },
-  { code: '+263', country: 'ZW - Zimbabwe' },
-  { code: '+260', country: 'MW - Malawi' },
-  { code: '+265', country: 'MZ - Mozambique' },
-  { code: '+258', country: 'TG - Tanzania' },
-  { code: '+255', country: 'KE - Kenya' },
-  { code: '+237', country: 'CM - Cameroon' },
-  { code: '+241', country: 'GA - Gabon' },
 ];
 
-// Validation functions
 const validateEmail = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email) && email.length >= 5;
@@ -100,7 +58,7 @@ const validateEmail = (email: string): boolean => {
 
 const validatePhone = (phone: string): boolean => {
   const cleaned = phone.replace(/[^0-9]/g, '');
-  return cleaned.length >= 5; // At least 5 digits
+  return cleaned.length >= 5;
 };
 
 const validateName = (name: string): boolean => {
@@ -108,32 +66,20 @@ const validateName = (name: string): boolean => {
   return cleaned.length >= 2;
 };
 
-const isMeaningful = (text: string): boolean => {
-  if (!text || text.trim().length < 4) return false;
-  const cleaned = text.toLowerCase().replace(/[^a-z0-9\s]/g, '');
-  const letters = cleaned.replace(/[^a-z]/g, '');
-  if (letters.length < 2) return false;
-  return true;
-};
-
 const isValidInput = (text: string): boolean => {
   if (!text || text.trim().length < 10) return false;
   const cleaned = text.toLowerCase();
-  // Check for at least 2 real words
   const words = cleaned.split(/\s+/).filter(w => w.length > 2);
   if (words.length < 2) return false;
-  // Check that text has some character variety (not just repeated chars)
   const lettersOnly = cleaned.replace(/[^a-z]/g, '');
   if (lettersOnly.length < 8) return false;
-  // Check not all same character repeated
   const uniqueChars = new Set(lettersOnly);
-  return uniqueChars.size >= 4; // At least 4 different letters
+  return uniqueChars.size >= 4;
 };
 
 const isValidOccupation = (text: string): boolean => {
   if (!text || text.trim().length < 3) return false;
   const cleaned = text.toLowerCase().replace(/[^a-z\s]/g, '');
-  // Accept any reasonable job title
   return cleaned.length >= 3;
 };
 
@@ -189,11 +135,6 @@ export default function InterviewPage() {
     }
   };
 
-  const validateStep = (): boolean => {
-    const stepError = getStepErrors();
-    return stepError === null;
-  };
-
   const handleNext = () => {
     const stepError = getStepErrors();
     if (stepError) {
@@ -214,7 +155,6 @@ export default function InterviewPage() {
   };
 
   const handleSubmit = async () => {
-    // Final validation check
     const allFieldsCheck = [
       { valid: validateName(formData.fullName), field: 'Full name' },
       { valid: validateEmail(formData.email), field: 'Email' },
@@ -237,38 +177,68 @@ export default function InterviewPage() {
     setError('');
 
     try {
-      // Map budget to tier
       let budgetTier = 'low';
       if (formData.budget === '$50–$150') budgetTier = 'medium';
       if (formData.budget === '$150+') budgetTier = 'high';
 
-      const response = await fetch('/api/submit-interview', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          budgetTier,
-        }),
+      const userId = crypto.randomUUID();
+      
+      const reportData = await generateExecutionReport({
+        budget: formData.budget,
+        budget_tier: budgetTier,
+        occupation: formData.occupation,
+        goals: formData.goals,
+        struggles: formData.struggles,
+        routine: formData.routine,
+        inconsistency_reason: formData.inconsistencyReason,
+        time_available: formData.timeAvailable,
+        tools_used: formData.toolsUsed,
       });
 
-      const data = await response.json();
+      await supabase.from('users').upsert({
+        id: userId,
+        full_name: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        budget_tier: budgetTier,
+        execution_score: reportData.execution_score,
+        ai_recommendation: reportData.ai_recommendation,
+        created_at: new Date().toISOString(),
+      });
 
-      console.log('[Interview Submit] Response:', data);
-      console.log('[Interview Submit] Report:', data.report);
+      await supabase.from('reports').insert({
+        id: crypto.randomUUID(),
+        user_id: userId,
+        execution_score: reportData.execution_score,
+        primary_bottleneck: reportData.primary_bottleneck,
+        secondary_bottlenecks: reportData.secondary_bottlenecks,
+        behavioral_pattern: reportData.behavioral_pattern,
+        psychological_root: reportData.psychological_root,
+        risk_level: reportData.risk_level,
+        fix_plan: reportData.fix_plan,
+        created_at: new Date().toISOString(),
+      });
 
-      if (data.success) {
-        // Store everything in sessionStorage for immediate access
-        sessionStorage.setItem('executionOS_userId', data.userId);
-        sessionStorage.setItem('executionOS_budgetTier', budgetTier);
-        sessionStorage.setItem('executionOS_report', JSON.stringify(data.report));
-        sessionStorage.setItem('executionOS_user', JSON.stringify(data.user));
-        sessionStorage.setItem('executionOS_score', data.report.execution_score || '0');
-        sessionStorage.setItem('executionOS_recommendation', data.report.ai_recommendation || 'blueprint');
-        router.push(`/report?userId=${data.userId}`);
-      } else {
-        setError(data.error || 'Something went wrong. Please try again.');
-      }
+      const userData = {
+        id: userId,
+        full_name: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        budget_tier: budgetTier,
+        execution_score: reportData.execution_score,
+        ai_recommendation: reportData.ai_recommendation,
+      };
+
+      sessionStorage.setItem('executionOS_userId', userId);
+      sessionStorage.setItem('executionOS_budgetTier', budgetTier);
+      sessionStorage.setItem('executionOS_report', JSON.stringify(reportData));
+      sessionStorage.setItem('executionOS_user', JSON.stringify(userData));
+      sessionStorage.setItem('executionOS_score', String(reportData.execution_score));
+      sessionStorage.setItem('executionOS_recommendation', reportData.ai_recommendation);
+
+      router.push(`/report?userId=${userId}`);
     } catch (err) {
+      console.error('Error:', err);
       setError('Failed to submit. Please try again.');
     } finally {
       setLoading(false);
@@ -298,7 +268,7 @@ export default function InterviewPage() {
         <div className={styles.formCard}>
           {step === 1 && (
             <div className={styles.stepContent}>
-              <h2 className={styles.stepTitle}>Let's start with the basics</h2>
+              <h2 className={styles.stepTitle}>Let&apos;s start with the basics</h2>
               <p className={styles.stepDescription}>We need your contact information to send your personalized report.</p>
               
               <div className={styles.formGroup}>
@@ -351,7 +321,7 @@ export default function InterviewPage() {
 
           {step === 2 && (
             <div className={styles.stepContent}>
-              <h2 className={styles.stepTitle}>What's your budget?</h2>
+              <h2 className={styles.stepTitle}>What&apos;s your budget?</h2>
               <p className={styles.stepDescription}>This helps us recommend the right execution system for your situation.</p>
               
               <div className={styles.budgetOptions}>
