@@ -169,7 +169,7 @@ export default function WaitlistPage() {
               </div>
               <div className={styles.detailItem}>
                 <span className={styles.detailLabel}>Your Score</span>
-                <span className={styles.detailValue}>{userData?.execution_score || 0}/100</span>
+                <span className={styles.detailValue}>{score}/100</span>
               </div>
               <div className={styles.detailItem}>
                 <span className={styles.detailLabel}>Status</span>
